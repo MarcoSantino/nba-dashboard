@@ -1,0 +1,24 @@
+.sidebar {
+  position: relative;
+  padding: 0 30px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(0deg, var(--blue) 0%, var(--purple) 100%);
+    @media (max-width: 600px) {
+      background: transparent;
+    }
+  }
+
+  &--item {
+    cursor: pointer;
+    &.selected {
+      color: var(--blue);
+    }
+  }
+}

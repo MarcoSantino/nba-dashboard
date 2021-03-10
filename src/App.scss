@@ -1,0 +1,12 @@
+main {
+  display: grid;
+  grid-template-columns: auto 20vw;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: auto 30vw;
+  }
+
+  @media (max-width: 600px) {
+    display: block;
+  }
+}

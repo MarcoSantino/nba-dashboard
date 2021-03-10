@@ -1,0 +1,22 @@
+.header {
+  position: relative;
+  padding: 15px 30px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--purple) 100%);
+    @media (max-width: 600px) {
+      background: transparent;
+    }
+  }
+
+  &--title {
+    color: var(--purple);
+    margin: 0;
+  }
+}
