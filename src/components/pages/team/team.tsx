@@ -67,13 +67,13 @@ function Team(): JSX.Element {
                         gameId: game.gameId,
                         home: {
                             isCurrent: id === game.hTeam.teamId,
-                            isWinner: game.hTeam?.score?.points > game.vTeam?.score?.points,
+                            isWinner: Number(game.hTeam?.score?.points) > Number(game.vTeam?.score?.points),
                             logo: game.hTeam?.logo,
                             name: game.hTeam?.fullName
                         },
                         away: {
                             isCurrent: id === game.vTeam.teamId,
-                            isWinner: game.hTeam?.score?.points < game.vTeam?.score?.points,
+                            isWinner: Number(game.hTeam?.score?.points) < Number(game.vTeam?.score?.points),
                             logo: game.vTeam?.logo,
                             name: game.vTeam?.fullName
                         }
@@ -96,9 +96,9 @@ function Team(): JSX.Element {
             gamesList.set(gamesMapped);
             playersList.set(playersMapped);
 
-        }).catch((error) => {
+        }).catch(() => {
             loadedDetails.set(true);
-            errorDetails.set(error);
+            errorDetails.set('Ops... there is an error.');
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [retryDetails.retry])
@@ -107,15 +107,38 @@ function Team(): JSX.Element {
         return (<Redirect to="/" />);
     }
 
+    if (!loadedDetails.isLoaded) {
+        return (<div className="team">Loading...</div>)
+    }
+    if (loadedDetails.isLoaded && errorDetails.error) {
+        return (<div className="team">{errorDetails.error}</div>)
+    }
+
+    let gamesEl: HTMLDivElement | null;
+    let playersEl: HTMLDivElement | null;
+    let teamEl: HTMLDivElement | null;
+
+    function scroll(el: HTMLDivElement | null) {
+        el?.scrollIntoView({ behavior: 'smooth' });
+    }
+
     return (
-        <div className="team">
+        <div className="team" ref={team => { teamEl = team; }}>
             <div className="team--head">
                 <img src={teamSelected?.logo} alt={teamSelected?.logo} />
                 <h2>{teamSelected?.name}</h2>
+
+                <ul>
+                    <li onClick={() => scroll(gamesEl)}>Games</li>
+                    <li onClick={() => scroll(playersEl)}>Players</li>
+                </ul>
             </div>
-            <div>
-                <h3>Games</h3>
-                <div>
+            <div className="team--games" ref={games => { gamesEl = games; }}>
+                <div className="team--players--head">
+                    <h3>Games</h3>
+                    <p onClick={() => scroll(teamEl)}>Back to top</p>
+                </div>
+                <div className="team--games--list">
                     {gamesList.games.reduce((items: JSX.Element[], game: GameMapped, index: number) => {
                         if (game.year !== seasonSelected) {
                             return items;
@@ -123,25 +146,50 @@ function Team(): JSX.Element {
 
                         const isHomeAndWinner = game.home?.isCurrent && game.home?.isWinner;
                         const isAwayAndWinner = game.away?.isCurrent && game.away?.isWinner;
+                        const isPointsFounded = game.points !== ' - ';
                         return [
                             ...items,
-                            <div key={index}>
-                                <span>{isHomeAndWinner || isAwayAndWinner ? 'W' : 'L'}</span>
-                                <b>{game.game}</b>
-                                <b>{game.points}</b>
+                            <div key={index} className="team--games--item">
+                                {isPointsFounded && <span className={`team--games--item__${isHomeAndWinner || isAwayAndWinner ? 'winner' : 'loser'}`}>
+                                    {isHomeAndWinner || isAwayAndWinner ? 'W' : 'L'}
+                                </span>}
+                                <div className="team--games--item__head">
+                                    <div className="team--games--item__img">
+                                        <img src={game.away?.logo || 'https://via.placeholder.com/50'} alt={game.away?.name} />
+                                        <span>-</span>
+                                        <img src={game.home?.logo || 'https://via.placeholder.com/50'} alt={game.home?.name} />
+                                    </div>
+                                    {
+                                        Boolean(game.arena) &&
+                                        <p className="team--games--item__location">
+                                            {game.arena} ({game.city})
+                                        </p>
+                                    }
+                                    <p className="team--games--item__game">{game.game}</p>
+                                    <p className="team--games--item__points">{game.points}</p>
+                                </div>
 
-                                {game.gameId && (<Link to={`/game/${game.gameId}`}>View Details</Link>)}
+                                {game.gameId && (
+                                    <Link className="team--games--item__view-details" to={`/game/${game.gameId}`}>View Details</Link>
+                                )}
                             </div>
                         ]
                     }, [])}
                 </div>
             </div>
-            <div>
-                <h3>Players</h3>
-                <div>
-                    {playersList.players.map((player: PlayerMapped) => (
-                        <div>
-                            {player.fullName}
+            <div className="team--players" ref={players => { playersEl = players; }}>
+                <div className="team--players--head">
+                    <h3>Players</h3>
+                    <p onClick={() => scroll(teamEl)}>Back to top</p>
+                </div>
+                <div className="team--players--list">
+                    {playersList.players.map((player: PlayerMapped, index: number) => (
+                        <div key={index} className="team--players--item">
+                            <div className="team--players--item__jersey">
+                                {player.jersey && <span>{player.jersey}</span>}
+                            </div>
+                            <span>{player.fullName}</span>
+                            <span>{player.position}</span>
                         </div>
                     ))}
                 </div>

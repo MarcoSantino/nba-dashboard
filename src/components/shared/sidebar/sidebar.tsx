@@ -54,6 +54,13 @@ function Sidebar(): JSX.Element {
         dispatch(selectSeasons(itemsDetails.items[0]))
     }
 
+    if (!loadedDetails.isLoaded) {
+        return (<div className="team">Loading...</div>)
+    }
+    if (loadedDetails.isLoaded && errorDetails.error) {
+        return (<div className="team">{errorDetails.error}</div>)
+    }
+
     return (
         <div className="sidebar">
             {seasons.map((season: string) =>

@@ -1,7 +1,12 @@
 .conference {
+  text-align: center;
+
   &--list {
-      display: grid;
-      grid-template-columns: 50% 50%;
-      padding: 0 30px;
-    }
+    display: grid;
+    grid-template-columns: 50% 50%;
+  }
+
+  &--wrapper {
+    padding: 30px;
+  }
 }

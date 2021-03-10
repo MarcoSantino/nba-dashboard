@@ -1,8 +1,12 @@
 :root {
   --black: #222222;
   --white: #fafafa;
+  --gray: #d4d4d4;
+  --gray-transparent: rgba(212, 212, 212, .3);
   --blue: #006de9;
   --purple: #7820dd;
+  --green: #56d645;
+  --red: #e21313;
 }
 
 body {
@@ -19,4 +23,9 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
 }

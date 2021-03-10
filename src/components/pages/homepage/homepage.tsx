@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { ChangeEvent, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Dispatch } from "redux"
@@ -6,11 +6,13 @@ import { HookConference } from '../../../interfaces/hooks/hook-conference';
 import { HookError } from '../../../interfaces/hooks/hook-error';
 import { HookLoaded } from '../../../interfaces/hooks/hook-loaded';
 import { HookRetry } from '../../../interfaces/hooks/hook-retry';
+import { HookSearch } from '../../../interfaces/hooks/hook-search';
 import { Conference, Store } from '../../../interfaces/redux/store';
 import { GetConferenceTeamList, Team } from '../../../interfaces/services/response/get-conference-team-list';
 import { saveWestConference, saveEastConference } from '../../../redux/actions/conference';
-import { useConference, useError, useLoaded, useRetry } from '../../../utils/hooks';
+import { useConference, useError, useLoaded, useRetry, useSearch } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
+import Input from '../../form/input/input';
 import './homepage.scss';
 
 function Homepage(): JSX.Element {
@@ -22,6 +24,7 @@ function Homepage(): JSX.Element {
     const itemsEastConferenceDetails: HookConference = useConference();
     const loadedDetails: HookLoaded = useLoaded();
     const retryDetails: HookRetry = useRetry();
+    const search: HookSearch = useSearch();
 
     /**
      * Selector redux
@@ -47,9 +50,9 @@ function Homepage(): JSX.Element {
 
             itemsWestConferenceDetails.set(westList);
             itemsEastConferenceDetails.set(eastList);
-        }).catch((error) => {
+        }).catch(() => {
             loadedDetails.set(true);
-            errorDetails.set(error);
+            errorDetails.set('Ops... there is an error');
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [retryDetails.retry])
@@ -64,26 +67,57 @@ function Homepage(): JSX.Element {
         dispatch(saveEastConference(itemsEastConferenceDetails.conference))
     }
 
+    function onChangeSearch(event: ChangeEvent<HTMLInputElement>): void {
+        const { value } = event.target;
+        search.set(value);
+    }
+
+    if (!loadedDetails.isLoaded && westConference.length === 0 && eastConference.length === 0) {
+        return (<div className="team">Loading...</div>)
+    }
+    if (loadedDetails.isLoaded && errorDetails.error) {
+        return (<div className="team">{errorDetails.error}</div>)
+    }
+
     return (
-        <div className="conference--list">
-            <div className="conference">
-                <h2>East Conference</h2>
-                {eastConference.map((team: Conference) => (
-                    <p key={team.teamId}>
-                        <Link to={`/team/${team.teamId}`}>
-                            {team.name} ({team.shortName})
-                        </Link>
-                    </p>))}
-            </div>
-            <div className="conference">
-                <h2>West Conference</h2>
-                {westConference.map((team: Conference) => (
-                    <p key={team.teamId}>
-                        <Link to={`/team/${team.teamId}`}>
-                            {team.name} ({team.shortName})
-                        </Link>
-                    </p>
-                ))}
+        <div className="conference--wrapper">
+            <Input id="search" label="Search" placeholder="Search your team..." onChange={onChangeSearch}
+                value={search.search} />
+            <div className="conference--list">
+                <div className="conference">
+                    <h2>East Conference</h2>
+                    {eastConference.reduce((teams: JSX.Element[], team: Conference) => {
+                        if (Boolean(search.search) && team.name.toLowerCase().indexOf(search.search.toLowerCase()) < 0) {
+                            return teams;
+                        }
+
+                        return [
+                            ...teams,
+                            <p key={team.teamId}>
+                                <Link to={`/team/${team.teamId}`}>
+                                    {team.name} ({team.shortName})
+                            </Link>
+                            </p>
+                        ]
+                    }, [])}
+                </div>
+                <div className="conference">
+                    <h2>West Conference</h2>
+                    {westConference.reduce((teams: JSX.Element[], team: Conference) => {
+                        if (Boolean(search.search) && team.name.toLowerCase().indexOf(search.search.toLowerCase()) < 0) {
+                            return teams;
+                        }
+
+                        return [
+                            ...teams,
+                            <p key={team.teamId}>
+                                <Link to={`/team/${team.teamId}`}>
+                                    {team.name} ({team.shortName})
+                            </Link>
+                            </p>
+                        ]
+                    }, [])}
+                </div>
             </div>
         </div>
     );

@@ -1,0 +1,45 @@
+.game {
+  padding: 30px;
+
+  &--head {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    text-align: center;
+    align-items: center;
+    font-size: 40px;
+
+    img {
+      display: inline-block;
+      height: 150px;
+    }
+  }
+
+  &--item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    text-align: center;
+    align-items: center;
+    position: relative;
+    font-size: 25px;
+    padding: 25px 0;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--blue) 0%, var(--purple) 100%);
+      @media (max-width: 600px) {
+        background: transparent;
+      }
+    }
+
+    &:last-child {
+      &::after {
+        content: none;
+      }
+    }
+  }
+}

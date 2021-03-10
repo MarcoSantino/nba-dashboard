@@ -1,6 +1,6 @@
 .sidebar {
   position: relative;
-  padding: 0 30px;
+  padding: 30px;
 
   &::after {
     content: "";
@@ -17,6 +17,8 @@
 
   &--item {
     cursor: pointer;
+    margin: auto;
+    padding-bottom: 15px;
     &.selected {
       color: var(--blue);
     }

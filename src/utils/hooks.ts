@@ -5,8 +5,11 @@ import { HookGames } from "../interfaces/hooks/hook-games";
 import { HookLoaded } from "../interfaces/hooks/hook-loaded";
 import { HookPlayer } from "../interfaces/hooks/hook-player";
 import { HookRetry } from "../interfaces/hooks/hook-retry";
+import { HookSearch } from "../interfaces/hooks/hook-search";
+import { HookStatistic, HookStatisticData } from "../interfaces/hooks/hook-statistic";
 import { HookStatsHomepage } from "../interfaces/hooks/hook-stats-homepage";
 import { Conference } from "../interfaces/redux/store";
+import { StatisticMapped } from "../interfaces/services/response/get-game-detail";
 import { GameMapped } from "../interfaces/services/response/get-games";
 import { PlayerMapped } from "../interfaces/services/response/get-players";
 
@@ -58,4 +61,22 @@ export function useGames(): HookGames {
     const set = useCallback((games: GameMapped[]) => setItems(() => games), []);
 
     return { games, set };
+}
+export function useStatistic(): HookStatistic {
+    const init = {
+        awayStatistic: null as StatisticMapped | null,
+        homeStatistic: null as StatisticMapped | null
+    };
+    const [statistics, setItems]: [HookStatisticData, Dispatch<SetStateAction<HookStatisticData>>] = useState((init as HookStatisticData));
+
+    const set = useCallback((statistics: HookStatisticData) => setItems(() => statistics), []);
+
+    return { statistics, set };
+}
+export function useSearch(): HookSearch {
+    const [search, setSearch]: [string, Dispatch<SetStateAction<string>>] = useState('' as string);
+
+    const set = useCallback((err: string) => setSearch(() => err), []);
+
+    return { search, set };
 }

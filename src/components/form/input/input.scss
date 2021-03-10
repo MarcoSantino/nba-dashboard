@@ -1,0 +1,32 @@
+.input {
+  display: block;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  appearance: none;
+  font-size: 14px;
+  padding: 5px 0 10px;
+  color: var(--white);
+
+  &--label {
+    color: var(--white);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  &--wrapper {
+    margin-bottom: 10px;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--blue) 0%, var(--purple) 100%);
+    }
+  }
+}
