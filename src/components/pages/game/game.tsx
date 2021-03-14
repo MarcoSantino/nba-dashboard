@@ -9,6 +9,7 @@ import { Conference, Store } from '../../../interfaces/redux/store';
 import { GetGameDetail, Statistic, StatisticMapped } from '../../../interfaces/services/response/get-game-detail';
 import { useError, useLoaded, useRetry, useStatistic } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
+import Loader from '../../shared/loader/loader';
 import './game.scss';
 
 function Game(): JSX.Element {
@@ -64,10 +65,12 @@ function Game(): JSX.Element {
     }
 
     if (!loadedDetails.isLoaded) {
-        return (<div className="team">Loading...</div>)
+        return (<div className="game text-center">
+            <Loader />
+        </div>)
     }
     if (loadedDetails.isLoaded && errorDetails.error) {
-        return (<div className="team">{errorDetails.error}</div>)
+        return (<div className="game">{errorDetails.error}</div>)
     }
 
     return (

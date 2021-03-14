@@ -13,6 +13,7 @@ import { saveWestConference, saveEastConference } from '../../../redux/actions/c
 import { useConference, useError, useLoaded, useRetry, useSearch } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
 import Input from '../../form/input/input';
+import Loader from '../../shared/loader/loader';
 import './homepage.scss';
 
 function Homepage(): JSX.Element {
@@ -73,10 +74,12 @@ function Homepage(): JSX.Element {
     }
 
     if (!loadedDetails.isLoaded && westConference.length === 0 && eastConference.length === 0) {
-        return (<div className="team">Loading...</div>)
+        return (<div className="conference--wrapper text-center">
+            <Loader />
+        </div>)
     }
     if (loadedDetails.isLoaded && errorDetails.error) {
-        return (<div className="team">{errorDetails.error}</div>)
+        return (<div className="conference--wrapper">{errorDetails.error}</div>)
     }
 
     return (

@@ -12,6 +12,7 @@ import { Game, GameMapped, GetGames } from '../../../interfaces/services/respons
 import { GetPlayers, Player, PlayerMapped } from '../../../interfaces/services/response/get-players';
 import { useError, useGames, useLoaded, usePlayer, useRetry } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
+import Loader from '../../shared/loader/loader';
 import './team.scss';
 
 function Team(): JSX.Element {
@@ -108,7 +109,9 @@ function Team(): JSX.Element {
     }
 
     if (!loadedDetails.isLoaded) {
-        return (<div className="team">Loading...</div>)
+        return (<div className="team text-center">
+            <Loader />
+        </div>)
     }
     if (loadedDetails.isLoaded && errorDetails.error) {
         return (<div className="team">{errorDetails.error}</div>)

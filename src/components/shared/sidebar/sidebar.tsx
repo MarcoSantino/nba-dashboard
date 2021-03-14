@@ -9,6 +9,7 @@ import { GetSeasons } from '../../../interfaces/services/response/get-seasons';
 import { addSeasons, selectSeasons } from '../../../redux/actions/season';
 import { useError, useItems, useLoaded, useRetry } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
+import Loader from '../loader/loader';
 import './sidebar.scss';
 
 function Sidebar(): JSX.Element {
@@ -55,10 +56,12 @@ function Sidebar(): JSX.Element {
     }
 
     if (!loadedDetails.isLoaded) {
-        return (<div className="team">Loading...</div>)
+        return (<div className="sidebar text-center">
+            <Loader />
+        </div>)
     }
     if (loadedDetails.isLoaded && errorDetails.error) {
-        return (<div className="team">{errorDetails.error}</div>)
+        return (<div className="sidebar">{errorDetails.error}</div>)
     }
 
     return (
