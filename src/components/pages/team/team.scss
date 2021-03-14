@@ -155,4 +155,18 @@
       }
     }
   }
+  &--statistic {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
+    align-items: center;
+    text-align: center;
+    &--head {
+      display: flex;
+      align-items: center;
+
+      h3 {
+        flex: 1;
+      }
+    }
+  }
 }

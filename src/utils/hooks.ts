@@ -6,12 +6,14 @@ import { HookLoaded } from "../interfaces/hooks/hook-loaded";
 import { HookPlayer } from "../interfaces/hooks/hook-player";
 import { HookRetry } from "../interfaces/hooks/hook-retry";
 import { HookSearch } from "../interfaces/hooks/hook-search";
+import { HookStandings } from "../interfaces/hooks/hook-standings";
 import { HookStatistic, HookStatisticData } from "../interfaces/hooks/hook-statistic";
 import { HookStatsHomepage } from "../interfaces/hooks/hook-stats-homepage";
 import { Conference } from "../interfaces/redux/store";
 import { StatisticMapped } from "../interfaces/services/response/get-game-detail";
 import { GameMapped } from "../interfaces/services/response/get-games";
 import { PlayerMapped } from "../interfaces/services/response/get-players";
+import { StandingMapped } from "../interfaces/services/response/get-standings";
 
 export function useError(): HookError {
     const [error, setError]: [string, Dispatch<SetStateAction<string>>] = useState('' as string);
@@ -61,6 +63,13 @@ export function useGames(): HookGames {
     const set = useCallback((games: GameMapped[]) => setItems(() => games), []);
 
     return { games, set };
+}
+export function useStandings(): HookStandings {
+    const [standings, setItems]: [StandingMapped[], Dispatch<SetStateAction<StandingMapped[]>>] = useState(([] as StandingMapped[]));
+
+    const set = useCallback((games: StandingMapped[]) => setItems(() => games), []);
+
+    return { standings, set };
 }
 export function useStatistic(): HookStatistic {
     const init = {
