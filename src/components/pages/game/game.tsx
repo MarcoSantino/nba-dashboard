@@ -77,28 +77,28 @@ function Game(): JSX.Element {
         <div className="game">
             <div className="game--head">
                 <div>
-                    <img src={statisticDetails.statistics?.awayStatistic?.logo}
-                        alt={statisticDetails.statistics?.awayStatistic?.name} />
+                    <img src={statisticDetails.statistics?.awayStatistic?.logo || 'https://via.placeholder.com/150'}
+                        alt={statisticDetails.statistics?.awayStatistic?.name || 'Name not found'} />
                 </div>
                 <span>-</span>
                 <div>
-                    <img src={statisticDetails.statistics?.homeStatistic?.logo}
-                        alt={statisticDetails.statistics?.homeStatistic?.name} />
+                    <img src={statisticDetails.statistics?.homeStatistic?.logo || 'https://via.placeholder.com/150'}
+                        alt={statisticDetails.statistics?.homeStatistic?.name || 'Name not found'} />
                 </div>
             </div>
 
             <div className="game--item">
-                <div>
+                {statisticDetails.statistics?.awayStatistic?.name ? <div>
                     <Link to={`/team/${statisticDetails.statistics?.awayStatistic?.teamId}`}>
                         {statisticDetails.statistics?.awayStatistic?.name}
                     </Link>
-                </div>
-                <div>Points</div>
-                <div>
+                </div> : <div>Name not found</div>}
+                <div></div>
+                {statisticDetails.statistics?.homeStatistic?.name ? <div>
                     <Link to={`/team/${statisticDetails.statistics?.homeStatistic?.teamId}`}>
                         {statisticDetails.statistics?.homeStatistic?.name}
                     </Link>
-                </div>
+                </div> : <div>Name not found</div>}
             </div>
             <div className="game--item">
                 <div>{statisticDetails.statistics?.awayStatistic?.points}</div>

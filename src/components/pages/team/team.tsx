@@ -53,7 +53,7 @@ function Team(): JSX.Element {
             loadedDetails.set(true);
 
             const gamesMapped = games.api.games.reduce((games: GameMapped[], game: Game) => {
-                if (game.league !== 'standard') {
+                if (game.seasonStage !== '2') {
                     return games;
                 }
 
