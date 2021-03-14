@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { Dispatch, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { ActionCreator, bindActionCreators } from 'redux';
 import { SidebarComponent } from '../../../interfaces/components/sidebar-component';
 import { HookError } from '../../../interfaces/hooks/hook-error';
 import { HookLoaded } from '../../../interfaces/hooks/hook-loaded';
 import { HookRetry } from '../../../interfaces/hooks/hook-retry';
+import { SeasonsType } from '../../../interfaces/redux/action-seasons';
 import { Store } from '../../../interfaces/redux/store';
 import { GetSeasons } from '../../../interfaces/services/response/get-seasons';
 import { addSeasons, selectSeasons } from '../../../redux/actions/season';
@@ -72,11 +73,11 @@ const mapStateToProps = (state: Store) => ({
     seasons: state.seasons
 })
 
-function mapDispatchToProps(dispatch: any) {
+function mapDispatchToProps(dispatch: Dispatch<SeasonsType>) {
     return bindActionCreators({
         addSeasonsFunction: (props: string[]) => dispatch(addSeasons(props)),
         selectSeasonsFunction: (props: string) => dispatch(selectSeasons(props))
-    }, dispatch)
+    }, dispatch as ActionCreator<any>)
 }
 
 export default connect(

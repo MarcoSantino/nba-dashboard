@@ -1,12 +1,13 @@
-import React, { ChangeEvent, useEffect } from 'react';
+import React, { ChangeEvent, Dispatch, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { bindActionCreators } from "redux"
+import { ActionCreator, bindActionCreators } from "redux"
 import { HomepageComponent } from '../../../interfaces/components/homepage-component';
 import { HookError } from '../../../interfaces/hooks/hook-error';
 import { HookLoaded } from '../../../interfaces/hooks/hook-loaded';
 import { HookRetry } from '../../../interfaces/hooks/hook-retry';
 import { HookSearch } from '../../../interfaces/hooks/hook-search';
+import { SeasonsType } from '../../../interfaces/redux/action-seasons';
 import { Conference, Store } from '../../../interfaces/redux/store';
 import { GetConferenceTeamList } from '../../../interfaces/services/response/get-conference-team-list';
 import { saveWestConference, saveEastConference } from '../../../redux/actions/conference';
@@ -119,11 +120,11 @@ const mapStateToProps = (state: Store) => ({
     westConference: state.westConference
 })
 
-function mapDispatchToProps(dispatch: any) {
+function mapDispatchToProps(dispatch: Dispatch<SeasonsType>) {
     return bindActionCreators({
         saveWestConferenceFunction: (props: Conference[]) => dispatch(saveWestConference(props)),
         saveEastConferenceFunction: (props: Conference[]) => dispatch(saveEastConference(props))
-    }, dispatch)
+    }, dispatch as ActionCreator<any>)
 }
 
 export default connect(
