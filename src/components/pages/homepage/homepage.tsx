@@ -1,8 +1,8 @@
 import React, { ChangeEvent, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Dispatch } from "redux"
-import { HookConference } from '../../../interfaces/hooks/hook-conference';
+import { bindActionCreators } from "redux"
+import { HomepageComponent } from '../../../interfaces/components/homepage-component';
 import { HookError } from '../../../interfaces/hooks/hook-error';
 import { HookLoaded } from '../../../interfaces/hooks/hook-loaded';
 import { HookRetry } from '../../../interfaces/hooks/hook-retry';
@@ -10,35 +10,32 @@ import { HookSearch } from '../../../interfaces/hooks/hook-search';
 import { Conference, Store } from '../../../interfaces/redux/store';
 import { GetConferenceTeamList } from '../../../interfaces/services/response/get-conference-team-list';
 import { saveWestConference, saveEastConference } from '../../../redux/actions/conference';
-import { useConference, useError, useLoaded, useRetry, useSearch } from '../../../utils/hooks';
+import { useError, useLoaded, useRetry, useSearch } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
 import { mappingResponseConference } from '../../../utils/mapper/conference-mapper';
 import Input from '../../form/input/input';
 import Loader from '../../shared/loader/loader';
 import './homepage.scss';
 
-function Homepage(): JSX.Element {
+function Homepage({
+    westConference,
+    eastConference,
+    saveWestConferenceFunction,
+    saveEastConferenceFunction
+}: HomepageComponent): JSX.Element {
     /**
      * Init hooks
      */
     const error: HookError = useError();
-    const itemsWestConferenceDetails: HookConference = useConference();
-    const itemsEastConferenceDetails: HookConference = useConference();
     const loader: HookLoaded = useLoaded();
     const retry: HookRetry = useRetry();
     const search: HookSearch = useSearch();
 
     /**
-     * Selector redux
-     */
-    const { westConference, eastConference } = useSelector((state: Store) => state)
-
-
-    /**
        * Setup effect hooks
        */
     useEffect(() => {
-        if (westConference.length > 0 || eastConference.length > 0) {
+        if ((westConference && westConference.length > 0) || (eastConference && eastConference.length > 0)) {
             return;
         }
         Promise.all([
@@ -50,8 +47,8 @@ function Homepage(): JSX.Element {
             const westList = mappingResponseConference(west);
             const eastList = mappingResponseConference(east);
 
-            itemsWestConferenceDetails.set(westList);
-            itemsEastConferenceDetails.set(eastList);
+            saveWestConferenceFunction(westList)
+            saveEastConferenceFunction(eastList)
         }).catch(() => {
             loader.set(true);
             error.set('Ops... there is an error');
@@ -59,22 +56,12 @@ function Homepage(): JSX.Element {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [retry.retry])
 
-    const dispatch: Dispatch<any> = useDispatch()
-
-    const isEastConferenceToSave = itemsEastConferenceDetails.conference.length > 0 && eastConference.length === 0;
-    const isWestConferenceToSave = itemsWestConferenceDetails.conference.length > 0 && westConference.length === 0;
-
-    if (isEastConferenceToSave || isWestConferenceToSave) {
-        dispatch(saveWestConference(itemsWestConferenceDetails.conference))
-        dispatch(saveEastConference(itemsEastConferenceDetails.conference))
-    }
-
     function onChangeSearch(event: ChangeEvent<HTMLInputElement>): void {
         const { value } = event.target;
         search.set(value);
     }
 
-    if (!loader.isLoaded && westConference.length === 0 && eastConference.length === 0) {
+    if (!loader.isLoaded && westConference?.length === 0 && eastConference?.length === 0) {
         return (<div className="conference--wrapper text-center">
             <Loader />
         </div>)
@@ -90,7 +77,7 @@ function Homepage(): JSX.Element {
             <div className="conference--list">
                 <div className="conference">
                     <h2>East Conference</h2>
-                    {eastConference.reduce((teams: JSX.Element[], team: Conference) => {
+                    {eastConference?.reduce((teams: JSX.Element[], team: Conference) => {
                         if (Boolean(search.search) && team.name.toLowerCase().indexOf(search.search.toLowerCase()) < 0) {
                             return teams;
                         }
@@ -107,7 +94,7 @@ function Homepage(): JSX.Element {
                 </div>
                 <div className="conference">
                     <h2>West Conference</h2>
-                    {westConference.reduce((teams: JSX.Element[], team: Conference) => {
+                    {westConference?.reduce((teams: JSX.Element[], team: Conference) => {
                         if (Boolean(search.search) && team.name.toLowerCase().indexOf(search.search.toLowerCase()) < 0) {
                             return teams;
                         }
@@ -127,4 +114,19 @@ function Homepage(): JSX.Element {
     );
 }
 
-export default Homepage;
+const mapStateToProps = (state: Store) => ({
+    eastConference: state.eastConference,
+    westConference: state.westConference
+})
+
+function mapDispatchToProps(dispatch: any) {
+    return bindActionCreators({
+        saveWestConferenceFunction: (props: Conference[]) => dispatch(saveWestConference(props)),
+        saveEastConferenceFunction: (props: Conference[]) => dispatch(saveEastConference(props))
+    }, dispatch)
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Homepage);

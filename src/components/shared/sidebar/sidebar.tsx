@@ -1,30 +1,25 @@
-import React, { Dispatch, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { SidebarComponent } from '../../../interfaces/components/sidebar-component';
 import { HookError } from '../../../interfaces/hooks/hook-error';
 import { HookLoaded } from '../../../interfaces/hooks/hook-loaded';
 import { HookRetry } from '../../../interfaces/hooks/hook-retry';
-import { HookStatsHomepage } from '../../../interfaces/hooks/hook-stats-homepage';
 import { Store } from '../../../interfaces/redux/store';
 import { GetSeasons } from '../../../interfaces/services/response/get-seasons';
 import { addSeasons, selectSeasons } from '../../../redux/actions/season';
-import { useError, useItems, useLoaded, useRetry } from '../../../utils/hooks';
+import { useError, useLoaded, useRetry } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
 import Loader from '../loader/loader';
 import './sidebar.scss';
 
-function Sidebar(): JSX.Element {
+function Sidebar({ seasonSelected, seasons, addSeasonsFunction, selectSeasonsFunction }: SidebarComponent): JSX.Element {
     /**
      * Init hooks
      */
     const error: HookError = useError();
-    const seasonList: HookStatsHomepage = useItems();
     const loader: HookLoaded = useLoaded();
     const retry: HookRetry = useRetry();
-
-    /**
-     * Selector redux
-     */
-    const { seasons, seasonSelected } = useSelector((state: Store) => state)
 
     /**
        * Setup effect hooks
@@ -37,9 +32,12 @@ function Sidebar(): JSX.Element {
             .then((result: GetSeasons) => {
                 loader.set(true);
 
-                seasonList.set(result.api.seasons.sort(
+                const seasonList = result.api.seasons.sort(
                     (a: string, b: string) => Number(a) > Number(b) ? -1 : Number(a) < Number(b) ? 1 : 0
-                ));
+                );
+
+                addSeasonsFunction(seasonList)
+                selectSeasonsFunction(seasonList[0])
             })
             .catch((error) => {
                 loader.set(true);
@@ -47,13 +45,6 @@ function Sidebar(): JSX.Element {
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [retry.retry])
-
-    const dispatch: Dispatch<any> = useDispatch()
-
-    if (seasonList.items.length > 0 && seasons.length === 0) {
-        dispatch(addSeasons(seasonList.items))
-        dispatch(selectSeasons(seasonList.items[0]))
-    }
 
     if (!loader.isLoaded) {
         return (<div className="sidebar text-center">
@@ -67,7 +58,7 @@ function Sidebar(): JSX.Element {
     return (
         <div className="sidebar">
             {seasons.map((season: string) =>
-                <p onClick={() => dispatch(selectSeasons(season))}
+                <p onClick={() => selectSeasonsFunction(season)}
                     className={`sidebar--item ${seasonSelected === season ? 'selected' : ''}`} key={season}>
                     {season}
                 </p>
@@ -76,4 +67,19 @@ function Sidebar(): JSX.Element {
     );
 }
 
-export default Sidebar;
+const mapStateToProps = (state: Store) => ({
+    seasonSelected: state.seasonSelected,
+    seasons: state.seasons
+})
+
+function mapDispatchToProps(dispatch: any) {
+    return bindActionCreators({
+        addSeasonsFunction: (props: string[]) => dispatch(addSeasons(props)),
+        selectSeasonsFunction: (props: string) => dispatch(selectSeasons(props))
+    }, dispatch)
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Sidebar);
