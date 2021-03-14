@@ -6,9 +6,10 @@ import { HookLoaded } from '../../../interfaces/hooks/hook-loaded';
 import { HookRetry } from '../../../interfaces/hooks/hook-retry';
 import { HookStatistic } from '../../../interfaces/hooks/hook-statistic';
 import { Conference, Store } from '../../../interfaces/redux/store';
-import { GetGameDetail, Statistic, StatisticMapped } from '../../../interfaces/services/response/get-game-detail';
+import { GetGameDetail } from '../../../interfaces/services/response/get-game-detail';
 import { useError, useLoaded, useRetry, useStatistic } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
+import { statisticMapper } from '../../../utils/mapper/game-mapper';
 import Loader from '../../shared/loader/loader';
 import './game.scss';
 
@@ -26,19 +27,19 @@ function Game(): JSX.Element {
     /**
      * Init hooks
      */
-    const errorDetails: HookError = useError();
-    const loadedDetails: HookLoaded = useLoaded();
-    const retryDetails: HookRetry = useRetry();
-    const statisticDetails: HookStatistic = useStatistic();
+    const error: HookError = useError();
+    const loader: HookLoaded = useLoaded();
+    const lockRetry: HookRetry = useRetry();
+    const statisticsHook: HookStatistic = useStatistic();
 
     useEffect(() => {
-        if (statisticDetails.statistics?.awayStatistic || statisticDetails.statistics?.homeStatistic
+        if (statisticsHook.statistics?.awayStatistic || statisticsHook.statistics?.homeStatistic
             || westConference.length === 0 || eastConference.length === 0) {
             return;
         }
         interceptor(`https://api-nba-v1.p.rapidapi.com/statistics/games/gameId/${id}`)
             .then((game: GetGameDetail) => {
-                loadedDetails.set(true);
+                loader.set(true);
                 const [away, home] = game.api.statistics;
 
                 const awayTeam = westConference.find((team: Conference) => team.teamId === away.teamId) ||
@@ -49,97 +50,86 @@ function Game(): JSX.Element {
                 const awayStatistic = statisticMapper(away, awayTeam);
                 const homeStatistic = statisticMapper(home, homeTeam);
 
-                statisticDetails.set({
+                statisticsHook.set({
                     awayStatistic,
                     homeStatistic
                 });
             }).catch(() => {
-                loadedDetails.set(true);
-                errorDetails.set('Ops... there is an error');
+                loader.set(true);
+                error.set('Ops... there is an error');
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [retryDetails.retry])
+    }, [lockRetry.retry])
 
     if (westConference.length === 0 || eastConference.length === 0) {
         return (<Redirect to="/" />);
     }
 
-    if (!loadedDetails.isLoaded) {
+    if (!loader.isLoaded) {
         return (<div className="game text-center">
             <Loader />
         </div>)
     }
-    if (loadedDetails.isLoaded && errorDetails.error) {
-        return (<div className="game">{errorDetails.error}</div>)
+    if (loader.isLoaded && error.error) {
+        return (<div className="game">{error.error}</div>)
     }
+
+    const { awayStatistic, homeStatistic } = statisticsHook.statistics;
 
     return (
         <div className="game">
             <div className="game--head">
                 <div>
-                    <img src={statisticDetails.statistics?.awayStatistic?.logo || 'https://via.placeholder.com/150'}
-                        alt={statisticDetails.statistics?.awayStatistic?.name || 'Name not found'} />
+                    <img src={awayStatistic?.logo || 'https://via.placeholder.com/150'}
+                        alt={awayStatistic?.name || 'Name not found'} />
                 </div>
                 <span>-</span>
                 <div>
-                    <img src={statisticDetails.statistics?.homeStatistic?.logo || 'https://via.placeholder.com/150'}
-                        alt={statisticDetails.statistics?.homeStatistic?.name || 'Name not found'} />
+                    <img src={homeStatistic?.logo || 'https://via.placeholder.com/150'}
+                        alt={homeStatistic?.name || 'Name not found'} />
                 </div>
             </div>
 
             <div className="game--item">
-                {statisticDetails.statistics?.awayStatistic?.name ? <div>
-                    <Link to={`/team/${statisticDetails.statistics?.awayStatistic?.teamId}`}>
-                        {statisticDetails.statistics?.awayStatistic?.name}
+                {awayStatistic?.name ? <div>
+                    <Link to={`/team/${awayStatistic?.teamId}`}>
+                        {awayStatistic?.name}
                     </Link>
                 </div> : <div>Name not found</div>}
                 <div></div>
-                {statisticDetails.statistics?.homeStatistic?.name ? <div>
-                    <Link to={`/team/${statisticDetails.statistics?.homeStatistic?.teamId}`}>
-                        {statisticDetails.statistics?.homeStatistic?.name}
+                {homeStatistic?.name ? <div>
+                    <Link to={`/team/${homeStatistic?.teamId}`}>
+                        {homeStatistic?.name}
                     </Link>
                 </div> : <div>Name not found</div>}
             </div>
             <div className="game--item">
-                <div>{statisticDetails.statistics?.awayStatistic?.points}</div>
+                <div>{awayStatistic?.points}</div>
                 <div>Points</div>
-                <div>{statisticDetails.statistics?.homeStatistic?.points}</div>
+                <div>{homeStatistic?.points}</div>
             </div>
             <div className="game--item">
-                <div>{statisticDetails.statistics?.awayStatistic?.assists}</div>
+                <div>{awayStatistic?.assists}</div>
                 <div>Assists</div>
-                <div>{statisticDetails.statistics?.homeStatistic?.assists}</div>
+                <div>{homeStatistic?.assists}</div>
             </div>
             <div className="game--item">
-                <div>{statisticDetails.statistics?.awayStatistic?.rebounds}</div>
+                <div>{awayStatistic?.rebounds}</div>
                 <div>Rebounds</div>
-                <div>{statisticDetails.statistics?.homeStatistic?.rebounds}</div>
+                <div>{homeStatistic?.rebounds}</div>
             </div>
             <div className="game--item">
-                <div>{statisticDetails.statistics?.awayStatistic?.blocks}</div>
+                <div>{awayStatistic?.blocks}</div>
                 <div>Blocks</div>
-                <div>{statisticDetails.statistics?.homeStatistic?.blocks}</div>
+                <div>{homeStatistic?.blocks}</div>
             </div>
             <div className="game--item">
-                <div>{statisticDetails.statistics?.awayStatistic?.steals}</div>
+                <div>{awayStatistic?.steals}</div>
                 <div>Steals</div>
-                <div>{statisticDetails.statistics?.homeStatistic?.steals}</div>
+                <div>{homeStatistic?.steals}</div>
             </div>
         </div>
     );
 }
 
 export default Game;
-
-function statisticMapper(statistic: Statistic, team: Conference | undefined): StatisticMapped {
-    return {
-        points: statistic.points,
-        steals: statistic.steals,
-        assists: statistic.assists,
-        blocks: statistic.blocks,
-        rebounds: statistic.totReb,
-        logo: team?.logo,
-        name: team?.name,
-        teamId: team?.teamId
-    }
-}

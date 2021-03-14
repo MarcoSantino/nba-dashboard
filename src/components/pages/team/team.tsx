@@ -11,10 +11,11 @@ import { HookStandings } from '../../../interfaces/hooks/hook-standings';
 import { Conference, Store } from '../../../interfaces/redux/store';
 import { Game, GameMapped, GetGames } from '../../../interfaces/services/response/get-games';
 import { GetPlayers, Player, PlayerMapped } from '../../../interfaces/services/response/get-players';
-import { GetStandings, StandingMapped } from '../../../interfaces/services/response/get-standings';
+import { GetStandings, Standing, StandingMapped } from '../../../interfaces/services/response/get-standings';
 import { useError, useGames, useLoaded, usePlayer, useRetry, useStandings } from '../../../utils/hooks';
 import { interceptor } from '../../../utils/interceptor';
 import { upperCaseFirst } from '../../../utils/labels';
+import { gameMapper, playerMapper, statisticTeam } from '../../../utils/mapper/team-mapper';
 import Loader from '../../shared/loader/loader';
 import './team.scss';
 
@@ -27,14 +28,14 @@ function Team(): JSX.Element {
     /**
      * Init hooks
      */
-    const errorDetails: HookError = useError();
+    const gamesPlayersError: HookError = useError();
     const standingsListError: HookError = useError();
     const playersList: HookPlayer = usePlayer();
     const gamesList: HookGames = useGames();
     const standingsList: HookStandings = useStandings();
-    const loadedDetails: HookLoaded = useLoaded();
+    const loader: HookLoaded = useLoaded();
     const standingsListLoader: HookLoaded = useLoaded();
-    const retryDetails: HookRetry = useRetry();
+    const gamesPlayersRetry: HookRetry = useRetry();
     const standingsListRetry: HookRetry = useRetry();
 
     /**
@@ -57,7 +58,7 @@ function Team(): JSX.Element {
             interceptor(`https://api-nba-v1.p.rapidapi.com/games/teamId/${id}`),
             interceptor(`https://api-nba-v1.p.rapidapi.com/players/teamId/${id}`)
         ]).then(([games, players]: [GetGames, GetPlayers]) => {
-            loadedDetails.set(true);
+            loader.set(true);
 
             const gamesMapped = games.api.games.reduce((games: GameMapped[], game: Game) => {
                 if (game.seasonStage !== '2') {
@@ -66,70 +67,34 @@ function Team(): JSX.Element {
 
                 return [
                     ...games,
-                    {
-                        arena: game.arena,
-                        city: game.city,
-                        points: `${game.vTeam?.score?.points} - ${game.hTeam?.score?.points}`,
-                        game: `${game.vTeam?.shortName} - ${game.hTeam?.shortName}`,
-                        year: game.seasonYear,
-                        gameId: game.gameId,
-                        home: {
-                            isCurrent: id === game.hTeam.teamId,
-                            isWinner: Number(game.hTeam?.score?.points) > Number(game.vTeam?.score?.points),
-                            logo: game.hTeam?.logo,
-                            name: game.hTeam?.fullName
-                        },
-                        away: {
-                            isCurrent: id === game.vTeam.teamId,
-                            isWinner: Number(game.hTeam?.score?.points) < Number(game.vTeam?.score?.points),
-                            logo: game.vTeam?.logo,
-                            name: game.vTeam?.fullName
-                        }
-                    }
+                    gameMapper(game, id)
                 ]
             }, []);
             const playersMapped = players.api.players.map((player: Player) => {
-                const dateOfBirth = new Date(player.dateOfBirth);
-
-                const birthDate = `${dateOfBirth.getDate()}/${dateOfBirth.getMonth() + 1}/${dateOfBirth.getFullYear()}`;
-                return {
-                    fullName: `${player.firstName} ${player.lastName}`,
-                    birthDate,
-                    isActive: player.leagues?.standard?.active === "1",
-                    jersey: player.leagues?.standard?.jersey,
-                    position: player.leagues?.standard?.pos
-                };
+                return playerMapper(player);
             });
 
             gamesList.set(gamesMapped);
             playersList.set(playersMapped);
 
         }).catch(() => {
-            loadedDetails.set(true);
-            errorDetails.set('Ops... there is an error.');
+            loader.set(true);
+            gamesPlayersError.set('Ops... there is an error.');
         })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [retryDetails.retry])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gamesPlayersRetry.retry])
 
     useEffect(() => {
-        if (!Boolean(teamSelected) || standingsList.standings.some(standing => standing.year === seasonSelected)) {
+        if (!Boolean(teamSelected) || standingsList.standings.some((standing: StandingMapped) =>
+            standing.year === seasonSelected)) {
             return;
         }
+        standingsListLoader.set(false);
         interceptor(`https://api-nba-v1.p.rapidapi.com/standings/standard/${seasonSelected}/teamId/${id}`)
             .then((standings: GetStandings) => {
                 standingsListLoader.set(true);
 
-                const standingsMapped = standings.api.standings.map(standing => ({
-                    year: standing.seasonYear,
-                    away: standing.away,
-                    home: standing.home,
-                    conferenceRank: standing.conference.rank,
-                    conferenceName: standing.conference.name,
-                    divisionRank: standing.division.rank,
-                    divisionName: standing.division.name,
-                    totalWin: standing.win,
-                    totalLoss: standing.loss,
-                }));
+                const standingsMapped = standings.api.standings.map((standing: Standing) => statisticTeam(standing));
 
                 standingsList.set(standingsMapped);
             })
@@ -137,20 +102,20 @@ function Team(): JSX.Element {
                 standingsListLoader.set(true);
                 standingsListError.set('Ops... there is an error.');
             })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, seasonSelected, standingsListRetry.retry]);
 
     if (!Boolean(teamSelected)) {
         return (<Redirect to="/" />);
     }
 
-    if (!loadedDetails.isLoaded) {
+    if (!loader.isLoaded) {
         return (<div className="team text-center">
             <Loader />
         </div>)
     }
-    if (loadedDetails.isLoaded && errorDetails.error) {
-        return (<div className="team">{errorDetails.error}</div>)
+    if (loader.isLoaded && gamesPlayersError.error) {
+        return (<div className="team">{gamesPlayersError.error}</div>)
     }
 
     let gamesEl: HTMLDivElement | null;
@@ -176,31 +141,32 @@ function Team(): JSX.Element {
                 <div className="team--statistic--head">
                     <h3>Statistics</h3>
                 </div>
-                {standingsList.standings.length > 0 ? standingsList.standings.map((standing: StandingMapped, index: number) => {
-                    return (
-                        <div className="team--statistic" key={index}>
-                            <div className="team--statistic__year"><b>Year:</b> {standing.year}</div>
-                            <div className="team--statistic__games">
-                                <b>Win: {standing.totalWin}</b>
-                                <p>Home | {standing.home?.win}</p>
-                                <p>Away | {standing.away?.win}</p>
+                {!standingsListLoader.isLoaded ? <Loader /> :
+                    standingsList.standings.length > 0 ? standingsList.standings.map((standing: StandingMapped, index: number) => {
+                        return (
+                            <div className="team--statistic" key={index}>
+                                <div className="team--statistic__year"><b>Year:</b> {standing.year}</div>
+                                <div className="team--statistic__games">
+                                    <b>Win: {standing.totalWin}</b>
+                                    <p>Home | {standing.home?.win}</p>
+                                    <p>Away | {standing.away?.win}</p>
+                                </div>
+                                <div className="team--statistic__games">
+                                    <b>Loss: {standing.totalLoss}</b>
+                                    <p>Home | {standing.home?.loss}</p>
+                                    <p>Away | {standing.away?.loss}</p>
+                                </div>
+                                <div className="team--statistic__ranking">
+                                    <b>Conference:</b>
+                                    <p>{upperCaseFirst(standing.conferenceName)} - {standing.conferenceRank}</p>
+                                </div>
+                                <div className="team--statistic__ranking">
+                                    <b>Division:</b>
+                                    <p>{upperCaseFirst(standing.divisionName)} - {standing.divisionRank}</p>
+                                </div>
                             </div>
-                            <div className="team--statistic__games">
-                                <b>Loss: {standing.totalLoss}</b>
-                                <p>Home | {standing.home?.loss}</p>
-                                <p>Away | {standing.away?.loss}</p>
-                            </div>
-                            <div className="team--statistic__ranking">
-                                <b>Conference:</b>
-                                <p>{upperCaseFirst(standing.conferenceName)} - {standing.conferenceRank}</p>
-                            </div>
-                            <div className="team--statistic__ranking">
-                                <b>Division:</b>
-                                <p>{upperCaseFirst(standing.divisionName)} - {standing.divisionRank}</p>
-                            </div>
-                        </div>
-                    );
-                }) : <div>Statistics not found</div>}
+                        );
+                    }) : <div>Statistics not found</div>}
             </div>
             <div className="team--games" ref={games => { gamesEl = games; }}>
                 <div className="team--players--head">

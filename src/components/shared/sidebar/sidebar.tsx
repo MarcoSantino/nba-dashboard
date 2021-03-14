@@ -16,10 +16,10 @@ function Sidebar(): JSX.Element {
     /**
      * Init hooks
      */
-    const errorDetails: HookError = useError();
-    const itemsDetails: HookStatsHomepage = useItems();
-    const loadedDetails: HookLoaded = useLoaded();
-    const retryDetails: HookRetry = useRetry();
+    const error: HookError = useError();
+    const seasonList: HookStatsHomepage = useItems();
+    const loader: HookLoaded = useLoaded();
+    const retry: HookRetry = useRetry();
 
     /**
      * Selector redux
@@ -35,33 +35,33 @@ function Sidebar(): JSX.Element {
         }
         interceptor("https://api-nba-v1.p.rapidapi.com/seasons/")
             .then((result: GetSeasons) => {
-                loadedDetails.set(true);
+                loader.set(true);
 
-                itemsDetails.set(result.api.seasons.sort(
+                seasonList.set(result.api.seasons.sort(
                     (a: string, b: string) => Number(a) > Number(b) ? -1 : Number(a) < Number(b) ? 1 : 0
                 ));
             })
             .catch((error) => {
-                loadedDetails.set(true);
-                errorDetails.set(error);
+                loader.set(true);
+                error.set(error);
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [retryDetails.retry])
+    }, [retry.retry])
 
     const dispatch: Dispatch<any> = useDispatch()
 
-    if (itemsDetails.items.length > 0 && seasons.length === 0) {
-        dispatch(addSeasons(itemsDetails.items))
-        dispatch(selectSeasons(itemsDetails.items[0]))
+    if (seasonList.items.length > 0 && seasons.length === 0) {
+        dispatch(addSeasons(seasonList.items))
+        dispatch(selectSeasons(seasonList.items[0]))
     }
 
-    if (!loadedDetails.isLoaded) {
+    if (!loader.isLoaded) {
         return (<div className="sidebar text-center">
             <Loader />
         </div>)
     }
-    if (loadedDetails.isLoaded && errorDetails.error) {
-        return (<div className="sidebar">{errorDetails.error}</div>)
+    if (loader.isLoaded && error.error) {
+        return (<div className="sidebar">{error.error}</div>)
     }
 
     return (
