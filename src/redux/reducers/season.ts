@@ -1,4 +1,5 @@
 import { ActionRedux } from "../../enums/action-redux.enum";
+import { SeasonsType } from "../../interfaces/redux/action-seasons";
 import { Store } from "../../interfaces/redux/store";
 
 const initialState: Store = {
@@ -11,7 +12,7 @@ const initialState: Store = {
 
 const reducer = (
     state: Store = initialState,
-    action: any
+    action: SeasonsType
 ): Store => {
     switch (action.type) {
         case ActionRedux.SAVE_SEASON:

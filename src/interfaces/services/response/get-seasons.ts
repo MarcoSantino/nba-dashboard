@@ -2,7 +2,7 @@ export interface Api {
 	status: number;
 	message: string;
 	results: number;
-	filters: any[];
+	filters: string[];
 	seasons: string[];
 }
 
