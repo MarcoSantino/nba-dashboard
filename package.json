@@ -10,6 +10,7 @@
     "@types/node": "^12.20.4",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.2",
+    "express": "^4.17.1",
     "node-sass": "^5.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -22,7 +23,8 @@
     "web-vitals": "^1.1.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node server/server.js",
+    "start-app": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
